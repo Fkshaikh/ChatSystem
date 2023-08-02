@@ -5,7 +5,7 @@ def messageRouter(clients, message,message_queue):
     message_data = json.loads(message.decode())
 
     # Get the receiver ID from the message
-    receiver_id = message_data['client_id']
+    receiver_id = message_data['recipient_id']
     # Check if the receiver ID is in the list of clients
     if receiver_id in clients:
         # Get the client socket for the receiver

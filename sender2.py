@@ -7,10 +7,12 @@ import time
 HOST = 'localhost'
 PORT = 8000
 
+client_id = "123"
+
 def auth():
     # Create a socket object and connect it to the server
 
-    client_id = "456"
+
     token = "abcdefg"
     auth_token = {"client_id":client_id,"token":token}
 
@@ -55,10 +57,10 @@ def send_messages(client_socket):
         try:
             # Get input from the user
             message_body = input("Enter Message:")
-            client_id = input("Enter Client Id:")
+            recipient_id = input("Enter Recipient Id:")
 
             # Create a message payload as a JSON string
-            payload = {"message_body": message_body, "client_id": client_id}
+            payload = {"message_body": message_body, "client_id": client_id,"recipient_id":recipient_id}
             payload = json.dumps(payload)
 
             # Send the message to the server

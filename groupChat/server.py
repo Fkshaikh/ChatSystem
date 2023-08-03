@@ -1,9 +1,9 @@
 import json
 import socket
 import threading
-from messageRouting import messageRouter
-from auth import verify_auth
-from queue_Message import deliver_queued_messages
+from utils.messageRouting import messageRouter
+from utils.auth import verify_auth
+from utils.queue_Message import deliver_queued_messages
 # Define the host and port for the server
 HOST = 'localhost'
 PORT = 8000

@@ -1,13 +1,14 @@
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
+from sqlalchemy import Column, Integer, String, text
+from sqlalchemy.dialects.postgresql import UUID
 
-Base = declarative_base()
+Base =declarative_base()
+
 
 class Users(Base):
-    __tablename__ = 'Users'
+    __tablename__ = 'users'
 
-    user_id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    uuid = Column(UUID(as_uuid=True), server_default=text('uuid_generate_v4()'), unique=True)
+    phone_number = Column(Integer, unique=True)
     name = Column(String)
-    number = Column(String)
-    status = Column(String)
-

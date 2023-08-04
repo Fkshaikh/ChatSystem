@@ -17,5 +17,5 @@ class GroupChat(Base):
     timestamp = Column(DateTime, server_default='NOW()')
 
 
-    group = relationship('Groups')
-    user = relationship('Users')
+    group = relationship(Groups)
+    user = relationship(Users)

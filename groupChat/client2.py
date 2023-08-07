@@ -7,7 +7,7 @@ import time
 HOST = 'localhost'
 PORT = 8001
 
-user_id = "1"
+user_id = "2"
 
 def auth():
     # Create a socket object and connect it to the server

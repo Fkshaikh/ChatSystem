@@ -5,7 +5,7 @@ from utils.messageRouting import  Group_messageRouter
 from utils.auth import verify_auth
 # Define the host and port for the server
 HOST = 'localhost'
-PORT = 8002
+PORT = 8001
 
 # Create a socket object and bind it to the host and port
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

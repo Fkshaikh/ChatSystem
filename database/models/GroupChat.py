@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String,  ForeignKey,  DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, text
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -13,8 +13,7 @@ class GroupChat(Base):
     user_id = Column(Integer, ForeignKey(Users.id))
     group_id = Column(Integer, ForeignKey(Groups.id))
     group_message = Column(String)
-    group_message_id = Column(Integer)
-    timestamp = Column(DateTime, server_default='NOW()')
+    timestamp = Column(DateTime, server_default=text('NOW()'))
 
 
     group = relationship(Groups)

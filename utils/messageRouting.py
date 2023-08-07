@@ -1,4 +1,6 @@
+import heapq
 import json
+import time
 
 from sqlalchemy import exists
 from sqlalchemy.orm import sessionmaker, session
@@ -10,32 +12,53 @@ from database.models.GroupUser import GroupUser
 engine = create_engine('postgresql://postgres:postgres@localhost:5433/ChatSystem', echo=True)
 
 
-#
-# def messageRouter(clients, message,message_queue):
-#     # Parse the message JSON
-#     message_data = json.loads(message.decode())
-#
-#     # Get the receiver ID from the message
-#     receiver_id = message_data['recipient_id']
-#     # Check if the receiver ID is in the list of clients
-#     if receiver_id in clients:
-#         # Get the client socket for the receiver
-#         receiver_socket = clients[receiver_id]
-#         # Send the message to the client
-#         receiver_socket.send(message)
-#
-#         # Print a confirmation message
-#         print(f"Sent message to {receiver_id}")
-#     else:
-#         # Print an error message if the recipient ID is not found
-#         print(f"Recipient {receiver_id} is offline. Queuing message.")
-#         # Add the message to the recipient's message queue
-#         if receiver_id not in message_queue:
-#             message_queue[receiver_id] = []
-#         message_queue[receiver_id].append(message.decode('utf-8'))
 
+def messageRouter(clients, message,message_queue):
+    # Parse the message JSON
+    message_data = json.loads(message.decode())
+
+    # Get the receiver ID from the message
+    receiver_id = message_data['recipient_id']
+    # Check if the receiver ID is in the list of clients
+    if receiver_id in clients:
+        # Get the client socket for the receiver
+        receiver_socket = clients[receiver_id]
+        # Send the message to the client
+        receiver_socket.send(message)
+
+        # Print a confirmation message
+        print(f"Sent message to {receiver_id}")
+    else:
+        # Print an error message if the recipient ID is not found
+        print(f"Recipient {receiver_id} is offline. Queuing message.")
+        # Add the message to the recipient's message queue
+        if receiver_id not in message_queue:
+            message_queue[receiver_id] = []
+        message_queue[receiver_id].append(message.decode('utf-8'))
+
+
+
+# Create a priority queue to track the expiration times of cached items
+expiration_queue = []
+
+# Set the time-to-live for cached items (in seconds)
+CACHE_TTL = 3600  # Example: 1 hour
+
+group_cache = {}  # twick Required ! need Cache Memory
+
+
+def evict_expired_cache_items():
+    # Function to evict expired cache items
+    current_time = time.time()
+    while expiration_queue and expiration_queue[0][0] <= current_time:
+        _, group_id = heapq.heappop(expiration_queue)
+        if group_id in group_cache:
+            del group_cache[group_id]
 
 def Group_messageRouter(clients, message):
+
+    # Evict expired cache items before processing the message
+    evict_expired_cache_items()
 
     # Parse the message JSON
     message_data = json.loads(message.decode())
@@ -43,8 +66,18 @@ def Group_messageRouter(clients, message):
     group_id = message_data['group_id']
     sender_socket = message_data['user_id']
 
-    # Find this groupid in database if available fetch all the group member user_id
-    user_ids = get_users_in_group(group_id, sender_socket)
+    # Find this groupid in the cache first
+    if group_id in group_cache:
+        timestamp, user_ids = group_cache[group_id]
+    else:
+        # Fetch all the group member user_ids from the database
+        user_ids = get_users_in_group(group_id, sender_socket)
+        # Store the group details in the cache with the current timestamp
+        timestamp = time.time()
+        group_cache[group_id] = (timestamp, user_ids)
+        # Add the expiration time to the priority queue
+        heapq.heappush(expiration_queue, (timestamp + CACHE_TTL, group_id))
+
 
     if user_ids:
         #find users online in the group
@@ -82,14 +115,12 @@ def get_users_in_group(group_id, user_id):
 
 
 def get_online_users(user_ids, clients):
-    # Function to check which user_ids are online from the list of user_ids
-    online_users = []
-    for user_id in user_ids:
-        user_id = str(user_id)
-        for client_user_id, client_socket in clients.items():
-            if client_user_id == user_id:
-                online_users.append(client_socket)
-                break
+    # Create a reverse mapping of clients dictionary
+    user_id_to_socket = {str(client_user_id): client_socket for client_user_id, client_socket in clients.items()}
+
+    # Find the online users using the reverse mapping
+    online_users = [user_id_to_socket[str(user_id)] for user_id in user_ids if str(user_id) in user_id_to_socket]
+
     return online_users
 
 

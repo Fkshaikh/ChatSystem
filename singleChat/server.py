@@ -3,7 +3,7 @@ import socket
 import threading
 from utils.messageRouting import messageRouter
 from utils.auth import verify_auth
-from utils.queue_Message import deliver_queued_messages
+from utils.queue_Message import deliver_queued_messages_singleChat
 # Define the host and port for the server
 HOST = 'localhost'
 PORT = 8000
@@ -46,7 +46,7 @@ def handle_client(client_socket):
         clients[message_data.get('client_id')] = client_socket
 
         # Deliver any queued messages to the client
-        deliver_queued_messages(client_socket,message_data['client_id'], message_queue)
+        deliver_queued_messages_singleChat(client_socket, message_data['client_id'], message_queue)
 
     else:
         print(f"User {message_data['client_id']} authentication failed.")

@@ -12,3 +12,4 @@ class Users(Base):
     user_id = Column(UUID(as_uuid=True), server_default=text('uuid_generate_v4()'), unique=True)
     phone_number = Column(Integer, unique=True)
     name = Column(String)
+    status = Column(String)

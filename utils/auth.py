@@ -4,3 +4,4 @@ def verify_auth(message):
         return True
     else:
         return False
+

@@ -19,21 +19,27 @@ def messageRouter(clients, message,message_queue):
 
     # Get the receiver ID from the message
     receiver_id = message_data['recipient_id']
+
     # Check if the receiver ID is in the list of clients
     if receiver_id in clients:
+
         # Get the client socket for the receiver
         receiver_socket = clients[receiver_id]
+
         # Send the message to the client
         receiver_socket.send(message)
 
         # Print a confirmation message
         print(f"Sent message to {receiver_id}")
     else:
+
         # Print an error message if the recipient ID is not found
         print(f"Recipient {receiver_id} is offline. Queuing message.")
+
         # Add the message to the recipient's message queue
         if receiver_id not in message_queue:
             message_queue[receiver_id] = []
+
         message_queue[receiver_id].append(message.decode('utf-8'))
 
 
@@ -69,17 +75,22 @@ def Group_messageRouter(clients, message):
     # Find this groupid in the cache first
     if group_id in group_cache:
         timestamp, user_ids = group_cache[group_id]
+
     else:
+
         # Fetch all the group member user_ids from the database
         user_ids = get_users_in_group(group_id, sender_socket)
+
         # Store the group details in the cache with the current timestamp
         timestamp = time.time()
         group_cache[group_id] = (timestamp, user_ids)
+
         # Add the expiration time to the priority queue
         heapq.heappush(expiration_queue, (timestamp + CACHE_TTL, group_id))
 
 
     if user_ids:
+
         #find users online in the group
         online_users = get_online_users(user_ids, clients)
 
@@ -115,6 +126,7 @@ def get_users_in_group(group_id, user_id):
 
 
 def get_online_users(user_ids, clients):
+
     # Create a reverse mapping of clients dictionary
     user_id_to_socket = {str(client_user_id): client_socket for client_user_id, client_socket in clients.items()}
 
@@ -125,6 +137,7 @@ def get_online_users(user_ids, clients):
 
 
 def send_message_to_group_members(user_sockets, message):
+
     # Function to send the message to a list of user_sockets
     for user_socket in user_sockets:
         user_socket.sendall(message)

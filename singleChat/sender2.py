@@ -5,9 +5,9 @@ import time
 
 # Define the host and port for the server
 HOST = 'localhost'
-PORT = 8000
+PORT = 8002
 
-client_id = "123"
+client_id = "7865432"
 
 def auth():
     # Create a socket object and connect it to the server
@@ -44,7 +44,10 @@ def receive_messages():
         try:
             # Receive a message from the server
             message = client_socket.recv(1024).decode('utf-8')
-            print(message)
+            message_data = json.loads(message)
+
+            print(f"{message_data['client_id']}:{message_data['message_body']}")
+
         except:
             # If there was an error, exit the loop
             break
@@ -74,13 +77,16 @@ def send_messages(client_socket):
 
 # Authenticate the user and start the message receiving thread
 client_socket = auth()
-receive_thread = threading.Thread(target=receive_messages)
-receive_thread.start()
 
 if client_socket:
     # Start a new thread to send messages to the server
     send_thread = threading.Thread(target=send_messages, args=(client_socket,))
     send_thread.start()
+    # Start a new thread to receive messages from the server
+    receive_thread = threading.Thread(target=receive_messages)
+    receive_thread.start()
+
+
 else:
     print("Authentication failed.")
 

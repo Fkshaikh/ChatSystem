@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database.models.GroupUser import GroupUser
+from database.models.UserChat import UserChat
 from database.models.Users import Users
 from database.models.Groups import Groups
 from database.models.GroupChat import GroupChat
@@ -13,6 +14,7 @@ Groups.metadata.create_all(engine)
 Users.metadata.create_all(engine)
 GroupUser.metadata.create_all(engine)
 GroupChat.metadata.create_all(engine)
+UserChat.metadata.create_all(engine)
 
 # Create a session to interact with the database
 Session = sessionmaker(bind=engine)

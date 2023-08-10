@@ -8,17 +8,21 @@ from sqlalchemy import create_engine
 
 from database.models.GroupChat import GroupChat
 from database.models.GroupUser import GroupUser
+from database.models.UserChat import UserChat
 
 engine = create_engine('postgresql://postgres:postgres@localhost:5433/ChatSystem', echo=True)
 
 
 
-def messageRouter(clients, message,message_queue):
+def singleChat_messageRouter(clients, message,message_queue):
     # Parse the message JSON
     message_data = json.loads(message.decode())
 
     # Get the receiver ID from the message
     receiver_id = message_data['recipient_id']
+
+    #Get the sender Id from the message
+    sender_id = message_data['client_id']
 
     # Check if the receiver ID is in the list of clients
     if receiver_id in clients:
@@ -29,12 +33,21 @@ def messageRouter(clients, message,message_queue):
         # Send the message to the client
         receiver_socket.send(message)
 
+
+        # Save the message to the database
+        save_message_to_database_Single(message_data['message_body'], sender_id, receiver_id)
+
+
         # Print a confirmation message
         print(f"Sent message to {receiver_id}")
     else:
 
         # Print an error message if the recipient ID is not found
         print(f"Recipient {receiver_id} is offline. Queuing message.")
+
+        # Save the message to the database
+        save_message_to_database_Single(message_data['message_body'], sender_id, receiver_id)
+
 
         # Add the message to the recipient's message queue
         if receiver_id not in message_queue:
@@ -70,7 +83,7 @@ def Group_messageRouter(clients, message):
     message_data = json.loads(message.decode())
 
     group_id = message_data['group_id']
-    sender_socket = message_data['user_id']
+    sender_id = message_data['user_id']
 
     # Find this groupid in the cache first
     if group_id in group_cache:
@@ -79,7 +92,7 @@ def Group_messageRouter(clients, message):
     else:
 
         # Fetch all the group member user_ids from the database
-        user_ids = get_users_in_group(group_id, sender_socket)
+        user_ids = get_users_in_group(group_id, sender_id)
 
         # Store the group details in the cache with the current timestamp
         timestamp = time.time()
@@ -98,14 +111,14 @@ def Group_messageRouter(clients, message):
         send_message_to_group_members(online_users, message)
 
         # Save the message to the database
-        save_message_to_database(message_data['message_body'], sender_socket, int(group_id))
+        save_message_to_database_Group(message_data['message_body'], sender_id, int(group_id))
 
         # Print a confirmation message
         print(f"Sent message to {group_id}")
 
     else:
         # Send the message to the client
-        sender_socket.send("Group Not Found".encode())
+        sender_id.send("Group Not Found".encode())
 
 
 def get_users_in_group(group_id, user_id):
@@ -142,7 +155,7 @@ def send_message_to_group_members(user_sockets, message):
     for user_socket in user_sockets:
         user_socket.sendall(message)
 
-def save_message_to_database(message, sender_id, group_id):
+def save_message_to_database_Group(message, sender_id, group_id):
 
     Session = sessionmaker(bind=engine)
     session = Session()
@@ -150,4 +163,14 @@ def save_message_to_database(message, sender_id, group_id):
     group_chat_message = GroupChat(group_message=message, user_id=sender_id, group_id=group_id)
 
     session.add(group_chat_message)
+    session.commit()
+
+def save_message_to_database_Single(message, sender_id, reciever_id):
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    user_chat_message = UserChat(user_message=message, user_id=sender_id, reciever_id=reciever_id)
+
+    session.add(user_chat_message)
     session.commit()

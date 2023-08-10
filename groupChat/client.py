@@ -44,7 +44,8 @@ def receive_messages():
         try:
             # Receive a message from the server
             message = client_socket.recv(1024).decode('utf-8')
-            print(message)
+            message_data = json.loads(message)
+            print(f"{message_data['client_id']}:{message_data['message_body']}")
         except:
             # If there was an error, exit the loop
             break

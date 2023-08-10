@@ -1,12 +1,12 @@
 import json
 import socket
 import threading
-from utils.messageRouting import messageRouter
+from utils.messageRouting import singleChat_messageRouter
 from utils.auth import verify_auth
 from utils.queue_Message import deliver_queued_messages_singleChat
 # Define the host and port for the server
 HOST = 'localhost'
-PORT = 8000
+PORT = 8002
 
 # Create a socket object and bind it to the host and port
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -61,7 +61,7 @@ def handle_client(client_socket):
         if not message:
             break
 
-        messageRouter(clients, message,message_queue)
+        singleChat_messageRouter(clients, message, message_queue)
         print(f"Received message from {message_data['client_id']}: {message}")
 
     # Close the client socket when the connection is closed
